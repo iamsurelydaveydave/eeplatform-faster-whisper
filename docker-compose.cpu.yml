@@ -22,30 +22,7 @@ services:
     depends_on:
       - redis
 
-  # GPU Worker (original)
-  worker-gpu:
-    build: ./worker
-    container_name: worker-gpu
-    restart: always
-    volumes:
-      - ./shared/audio:/app/shared/audio
-    environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - DEVICE=cuda
-      - MODEL_SIZE=small
-      - GPU_WORKERS=2
-    depends_on:
-      - redis
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-
-  # CPU Workers for horizontal scaling
+  # CPU-only workers (for development or CPU-only environments)
   worker-cpu-1:
     build:
       context: ./worker
@@ -59,7 +36,7 @@ services:
       - REDIS_PORT=6379
       - DEVICE=cpu
       - MODEL_SIZE=base
-      - CPU_WORKERS=4
+      - CPU_WORKERS=3
     depends_on:
       - redis
 
@@ -76,6 +53,23 @@ services:
       - REDIS_PORT=6379
       - DEVICE=cpu
       - MODEL_SIZE=base
-      - CPU_WORKERS=4
+      - CPU_WORKERS=3
+    depends_on:
+      - redis
+
+  worker-cpu-3:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile.cpu
+    container_name: worker-cpu-3
+    restart: always
+    volumes:
+      - ./shared/audio:/app/shared/audio
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - DEVICE=cpu
+      - MODEL_SIZE=base
+      - CPU_WORKERS=3
     depends_on:
       - redis
