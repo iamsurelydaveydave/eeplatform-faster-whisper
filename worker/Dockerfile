@@ -7,10 +7,9 @@ COPY requirements.txt .
 
 RUN apt-get update && apt-get install -y python3-pip ffmpeg && rm -rf /var/lib/apt/lists/*
 
-# Install torch with CUDA support and other deps
 RUN pip install --no-cache-dir torch==2.2.0+cu121 torchvision --extra-index-url https://download.pytorch.org/whl/cu121
 RUN pip install --no-cache-dir -r requirements.txt
 
 ENV REDIS_HOST=redis
 
-CMD ["python3", "worker.py"]
+CMD ["python", "worker.py"]

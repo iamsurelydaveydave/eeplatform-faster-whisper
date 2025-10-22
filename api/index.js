@@ -2,10 +2,15 @@ import express from "express";
 import multer from "multer";
 import { createClient } from "redis";
 import { randomUUID } from "crypto";
+import dotenv from "dotenv";
+dotenv.config();
+
+const REDIS_HOST = process.env.REDIS_HOST || "localhost";
+const REDIS_PORT = process.env.REDIS_PORT || "6379";
 
 const app = express();
 const upload = multer({ dest: "/app/shared/audio" });
-const redis = createClient({ url: `redis://${process.env.REDIS_HOST}:6379` });
+const redis = createClient({ url: `redis://${REDIS_HOST}:${REDIS_PORT}` });
 
 await redis.connect();
 

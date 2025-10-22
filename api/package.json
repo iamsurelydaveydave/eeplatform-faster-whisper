@@ -5,6 +5,7 @@
   "license": "MIT",
   "dependencies": {
     "crypto": "^1.0.1",
+    "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "multer": "^2.0.2",
     "redis": "^5.8.3"
