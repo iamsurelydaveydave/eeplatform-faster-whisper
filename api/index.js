@@ -4,6 +4,11 @@ import { createClient } from "redis";
 import { randomUUID } from "crypto";
 import dotenv from "dotenv";
 import path from "path";
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 dotenv.config();
 
 const REDIS_HOST = process.env.REDIS_HOST || "localhost";
@@ -59,7 +64,7 @@ const fileFilter = (req, file, cb) => {
 };
 
 const upload = multer({
-  dest: "/app/shared/audio",
+  dest: path.join(__dirname, "../shared/audio"),
   fileFilter: fileFilter,
   limits: {
     fileSize: 100 * 1024 * 1024, // 100MB limit
@@ -152,4 +157,4 @@ app.use((error, req, res, next) => {
   });
 });
 
-app.listen(8000, () => console.log("API running on port 8000"));
+app.listen(3000, () => console.log("API running on port 3000"));

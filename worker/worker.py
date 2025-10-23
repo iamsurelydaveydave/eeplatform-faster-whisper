@@ -4,18 +4,22 @@ import os
 from faster_whisper import WhisperModel
 from multiprocessing import Process
 
-REDIS_HOST = os.getenv("REDIS_HOST", "redis")
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 DEVICE = os.getenv("DEVICE", "cuda")  # "cuda" or "cpu"
 MODEL_SIZE = os.getenv("MODEL_SIZE", "small")  # "tiny", "base", "small", "medium", "large"
 
-def worker_main(worker_id):
+def worker_main(worker_id, device=None):
+    # Use passed device or fall back to environment variable
+    if device is None:
+        device = DEVICE.lower()
+    
     # Configure model based on device
-    if DEVICE.lower() == "cpu":
+    if device.lower() == "cpu":
         model = WhisperModel(MODEL_SIZE, device="cpu", compute_type="int8")
         device_info = "CPU"
     else:
         model = WhisperModel(MODEL_SIZE, device="cuda", compute_type="float16")
-        device_info = "CUDA"
+        device_info = "GPU"
     
     r = redis.Redis(host=REDIS_HOST)
     print(f"[{device_info} Worker {worker_id}] Ready with model: {MODEL_SIZE}")
@@ -86,18 +90,27 @@ def worker_main(worker_id):
                 print(f"[{device_info} Worker {worker_id}] Warning: Could not remove {audio_path}: {cleanup_error}")
 
 if __name__ == "__main__":
-    # Adjust process count based on device
-    if DEVICE.lower() == "cpu":
-        N_PROCESSES = int(os.getenv("CPU_WORKERS", "4"))  # CPU workers can be more numerous
-    else:
-        N_PROCESSES = int(os.getenv("GPU_WORKERS", "2"))  # GPU workers limited by VRAM
+    # Run both CPU and GPU workers simultaneously
+    CPU_WORKERS = int(os.getenv("CPU_WORKERS", "10"))
+    GPU_WORKERS = int(os.getenv("GPU_WORKERS", "10"))
     
-    print(f"Starting {N_PROCESSES} {DEVICE.upper()} workers with model: {MODEL_SIZE}")
+    print(f"Starting {CPU_WORKERS} CPU workers and {GPU_WORKERS} GPU workers with model: {MODEL_SIZE}")
     
     processes = []
-    for i in range(N_PROCESSES):
-        p = Process(target=worker_main, args=(i,))
+    
+    # Start CPU workers
+    for i in range(CPU_WORKERS):
+        p = Process(target=worker_main, args=(f"CPU-{i}", "cpu"))
         p.start()
         processes.append(p)
+    
+    # Start GPU workers
+    for i in range(GPU_WORKERS):
+        p = Process(target=worker_main, args=(f"GPU-{i}", "cuda"))
+        p.start()
+        processes.append(p)
+    
+    print(f"All {CPU_WORKERS + GPU_WORKERS} workers started successfully!")
+    
     for p in processes:
         p.join()
