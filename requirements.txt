@@ -1,0 +1,16 @@
+# Core dependencies
+faster-whisper==1.1.0
+pyav>=12.0.0
+numpy>=1.26.0
+soundfile>=0.12.1
+
+# Optional: for model conversion or Hugging Face integration
+ctranslate2>=4.4.0
+transformers[torch]>=4.38.0
+
+# NVIDIA GPU runtime libraries (CUDA 12 + cuDNN 9)
+nvidia-cublas-cu12
+nvidia-cudnn-cu12==9.*
+
+# For logging and process management
+psutil>=5.9.0
